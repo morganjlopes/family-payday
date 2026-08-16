@@ -44,8 +44,10 @@ At 1028 points:
 | Option | Cash today | Points after |
 |---|---|---|
 | Cash Out | $110.00 | 28 |
-| Bonus Only | $10.00 | 1028 |
-| Roll Over | $0.00 | 1128 |
+| Bonus Only | $10.00 | 1,028 |
+| Roll Over | $0.00 | 1,128 |
+
+Each card shows those two numbers and nothing else. Selecting one reveals a single sentence about what it does to her bonus. The screen deliberately does not project months ahead.
 
 Cash Out converts every full hundred and leaves the remainder on the board. Bonus Only pays the bonus and keeps every point. Roll Over converts the bonus to points at 10 points per $1 and pays no cash.
 
@@ -92,20 +94,6 @@ Roll Over and Bonus Only are worth the same amount today. At 1028 points, Bonus 
 - Not crossing: "Your bonus stays at $2.00 until you reach 300 points. You would need 30 more after this."
 
 Starting at 290 points and rolling over every payout with no new points earned: 290, 310, 340, 370, 400, 440.
-
-## Seeing it play out over time
-
-Step 2 has a 6 month and 12 month toggle. Each option card shows a third number: the cash collected over that stretch plus what the board would be worth if cashed out at the end, assuming the same choice every payout and no new points earned.
-
-Starting at 1,028 points:
-
-| Option | 6 months | 12 months |
-|---|---|---|
-| Cash Out | $110.00 | $110.00 |
-| Bonus Only | $170.00 | $230.00 |
-| Roll Over | $187.00 | $341.00 |
-
-The zero earning assumption is what makes the mechanic visible on its own, and it is stated on screen. It does make Cash Out look flat, since with no new points there is nothing to cash out after the first payout. Adding a "points earned each month" input to `project()` is the natural next step if that feels unfair.
 
 ## Notes
 

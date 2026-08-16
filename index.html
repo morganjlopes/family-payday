@@ -156,9 +156,8 @@
   .opt-title { font-size: 1.25rem; font-weight: 800; margin: 0; }
   .opt-desc { color: #64748b; margin: .1rem 0 0; font-size: .95rem; }
   .opt-stats { display: flex; gap: 1.1rem; flex: 0 0 auto; align-items: center; }
-  .stat { text-align: right; min-width: 88px; }
-  .stat.proj { border-left: 2px solid rgba(100,116,139,.2); padding-left: 1.1rem; }
-  .stat .val { font-size: 1.45rem; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .stat { text-align: right; min-width: 106px; }
+  .stat .val { font-size: 1.7rem; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
   .stat .lbl { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: #64748b; font-weight: 700; }
   .note { font-size: .98rem; color: #475569; margin: .85rem 0 0; padding-top: .8rem; border-top: 2px solid rgba(100,116,139,.18); }
   .note.up { color: #15803d; font-weight: 700; }
@@ -349,17 +348,7 @@
       <p class="mb-0 text-secondary" id="notYetBody"></p>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3" id="projRow">
-      <strong style="font-size:.95rem">If you pick the same thing every payout</strong>
-      <div class="seg">
-        <button class="seg-btn on" data-m="6" onclick="setMonths(6)">6 months</button>
-        <button class="seg-btn" data-m="12" onclick="setMonths(12)">12 months</button>
-      </div>
-    </div>
-
     <div class="d-grid gap-3" id="options"></div>
-
-    <p class="text-secondary mt-3 mb-0" style="font-size:.88rem" id="projNote"></p>
 
     <div class="actions"><div class="inner">
       <button class="btn btn-quiet" onclick="go('points')">Back</button>
@@ -509,21 +498,6 @@ function outcome(id, c) {
   if (id === 'cashout')  return { cash: c.total, pointsAfter: c.leftover };
   if (id === 'bonus')    return { cash: c.bonus, pointsAfter: c.points };
   return { cash: 0, pointsAfter: c.points + c.bonusPoints };
-}
-
-// Play one choice forward, making the same call at every payout. The first
-// payout uses the points she already has, so no earning is added before it.
-// Value is cash collected plus what the board is worth cashed out at the end.
-function project(id, startPoints, monthCount, earnPerMonth) {
-  let pts = startPoints;
-  let cash = 0;
-  for (let m = 0; m < monthCount; m++) {
-    if (m > 0) pts += earnPerMonth;
-    const r = outcome(id, calc(pts));
-    cash += r.cash;
-    pts = r.pointsAfter;
-  }
-  return { cash: cash, points: pts, value: cash + calc(pts).total };
 }
 
 // ============================================================
@@ -816,10 +790,6 @@ function renderOptions() {
   el('notYet').classList.toggle('d-none', enough);
   el('options').classList.toggle('d-none', !enough);
   el('confirm').classList.toggle('d-none', !enough);
-  el('projRow').classList.toggle('d-none', !enough);
-  el('projNote').classList.toggle('d-none', !enough);
-  el('projNote').textContent = 'The last column is the cash you would collect over ' + months +
-    ' months plus what your points would be worth if you cashed out at the end. It assumes you do not earn any new points.';
   choice = null;
 
   if (!enough) {
@@ -840,8 +810,6 @@ function renderOptions() {
         '<div class="opt-stats">' +
           '<div class="stat"><div class="val">' + money(r.cash) + '</div><div class="lbl">Cash today</div></div>' +
           '<div class="stat"><div class="val">' + num(r.pointsAfter) + '</div><div class="lbl">Points after</div></div>' +
-          '<div class="stat proj"><div class="val">' + money(project(o.id, c.points, months, 0).value) +
-            '</div><div class="lbl">In ' + months + ' months</div></div>' +
         '</div>' +
       '</div>' +
       '<p class="note d-none ' + noteClass(o.id, c) + '">' + noteFor(o.id, c) + '</p>' +
@@ -863,13 +831,8 @@ function chooseOption(id) {
 
 function setMonths(m) {
   months = m;
-  document.querySelectorAll('.seg-btn').forEach(b => {
-    b.classList.toggle('on', Number(b.dataset.m || b.dataset.im) === m);
-  });
-  if (!el('scInvest').classList.contains('d-none')) { refreshInv(); return; }
-  const keep = choice;
-  renderOptions();
-  if (keep) chooseOption(keep);
+  document.querySelectorAll('.seg-btn').forEach(b => b.classList.toggle('on', Number(b.dataset.im) === m));
+  refreshInv();
 }
 
 // ============================================================
