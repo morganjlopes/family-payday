@@ -79,6 +79,24 @@
   }
   .points-field:focus { outline: none; border-color: var(--kid); }
 
+  .field-box {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: .1rem;
+    border: 3px solid var(--line); border-radius: 18px; background: #fff; padding: .6rem .25rem;
+  }
+  .field-box:focus-within { border-color: var(--kid); }
+  .field-box .cur { font-size: 2.4rem; font-weight: 800; color: #94a3b8; }
+  .bare-field {
+    font-size: 3.25rem; font-weight: 800; text-align: center;
+    border: none; outline: none; background: none; color: #1e293b;
+    width: 100%; max-width: 260px; padding: 0; font-variant-numeric: tabular-nums;
+  }
+
+  .flag {
+    background: #fffbeb; border: 2px solid #fcd34d; border-radius: 14px;
+    padding: .75rem 1rem; font-size: .95rem; color: #78350f;
+  }
+  .invite { background: var(--kid-light); border: 2px solid var(--kid); border-radius: 16px; padding: 1rem 1.15rem; }
+
   .round-btn {
     width: 74px; height: 74px; border-radius: 50%; flex: 0 0 auto; padding: 0;
     border: 3px solid var(--line); background: #fff;
@@ -217,7 +235,7 @@
 
 <div class="container shell">
 
-  <div class="steps"><span id="dot1"></span><span id="dot2"></span><span id="dot3"></span></div>
+  <div class="steps" id="dots"></div>
 
   <!-- ================= STEP 1 ================= -->
   <section id="step1">
@@ -261,6 +279,7 @@
       <div class="tier"><p class="mb-0" id="peekLine"></p></div>
 
       <div class="actions"><div class="inner">
+        <button class="btn btn-quiet" onclick="go(4)">Invest cash</button>
         <button class="btn btn-go" id="toStep2" onclick="go(2)" disabled>See my choices</button>
       </div></div>
     </div>
@@ -278,6 +297,8 @@
       </div>
       <div class="bar"><i id="tierBar" style="width:0%"></i></div>
     </div>
+
+    <div class="flag d-none mb-3" id="investFlag"></div>
 
     <div class="tier text-center d-none mb-3" id="notYet">
       <p class="fs-4 fw-bold mb-2" id="notYetTitle"></p>
@@ -317,6 +338,12 @@
       <p class="mb-0" id="nextMonth"></p>
     </div>
 
+    <div class="invite mb-3 d-none" id="reinvite">
+      <p class="fw-bold mb-1" id="reinviteTitle"></p>
+      <p class="mb-2" style="font-size:.95rem" id="reinviteBody"></p>
+      <button class="btn btn-quiet w-100" style="min-height:52px" onclick="reinvest()">Invest some of it back</button>
+    </div>
+
     <details class="tier mb-3">
       <summary>Show the math</summary>
       <div class="maths mt-3" id="maths"></div>
@@ -325,6 +352,72 @@
     <div class="actions"><div class="inner">
       <button class="btn btn-quiet" onclick="reset()">Done</button>
       <button class="btn btn-go" id="otherKid" onclick="switchKid()"></button>
+    </div></div>
+  </section>
+
+  <!-- ================= STEP 4: invest cash ================= -->
+  <section id="step4" class="d-none">
+    <h2 class="h5 fw-bold mb-1" id="s4Title"></h2>
+    <p class="text-secondary mb-3" style="font-size:.95rem">Hand over cash and turn it into points. Every $1 becomes 10 points.</p>
+
+    <div class="d-flex gap-3 align-items-center mb-3">
+      <button class="round-btn" onclick="bumpInv(-1)" aria-label="Take away a dollar">&#8722;</button>
+      <div class="field-box">
+        <span class="cur">$</span>
+        <input class="bare-field" id="inv" type="text" inputmode="numeric" pattern="[0-9]*" value="0"
+               oninput="onInvInput()" onfocus="onInvFocus()" onblur="onInvBlur()">
+      </div>
+      <button class="round-btn" onclick="bumpInv(1)" aria-label="Add a dollar">+</button>
+    </div>
+    <div class="d-flex gap-2 mb-2">
+      <button class="chip" onclick="bumpInv(5)">+$5</button>
+      <button class="chip" onclick="bumpInv(10)">+$10</button>
+      <button class="chip" onclick="bumpInv(20)">+$20</button>
+    </div>
+    <div class="text-center mb-3">
+      <button class="clear-btn" onclick="setInv(0)">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+        Clear
+      </button>
+    </div>
+
+    <div class="tier mb-3"><p class="mb-0" id="invLine"></p></div>
+
+    <div class="d-none" id="invImpactWrap">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+        <strong style="font-size:.95rem">What this money does for you</strong>
+        <div class="seg">
+          <button class="seg-btn on" data-im="6" onclick="setMonths(6)">6 months</button>
+          <button class="seg-btn" data-im="12" onclick="setMonths(12)">12 months</button>
+        </div>
+      </div>
+      <div class="tier"><div id="invImpact"></div></div>
+    </div>
+
+    <div class="actions"><div class="inner">
+      <button class="btn btn-quiet" onclick="go(1)">Back</button>
+      <button class="btn btn-go" id="invConfirm" onclick="go(5)" disabled>Invest</button>
+    </div></div>
+  </section>
+
+  <!-- ================= STEP 5: invest result ================= -->
+  <section id="step5" class="d-none">
+    <h2 class="h4 fw-bold mb-1" id="s5Title"></h2>
+    <p class="text-secondary mb-3" id="s5Sub"></p>
+
+    <div class="tier mb-3">
+      <div class="fw-bold mb-1 text-uppercase" style="font-size:.75rem;letter-spacing:.06em;color:#64748b">Do this now</div>
+      <ol class="todo" id="invTodo"></ol>
+    </div>
+
+    <div class="tier mb-3">
+      <div class="fw-bold mb-2 text-uppercase" style="font-size:.75rem;letter-spacing:.06em;color:#64748b">What this earns her</div>
+      <p class="mb-0" id="invNext"></p>
+    </div>
+
+    <div class="actions"><div class="inner">
+      <button class="btn btn-quiet" onclick="reset()">Done</button>
+      <button class="btn btn-go" id="invOther" onclick="switchKid()"></button>
     </div></div>
   </section>
 
@@ -389,6 +482,15 @@ const OPTIONS = [
 let kid = null;
 let choice = null;
 let months = 6;
+
+// Points bought with cash this session, per kid. They are meant for the NEXT
+// payout, so step 2 flags them rather than quietly folding them into today's
+// cash out.
+const investedToday = { avery: 0, rowan: 0 };
+
+// What the board reads once the payout just shown is applied. Reinvesting
+// from step 3 has to start here, not from the pre payout total.
+let boardAfterPayout = 0;
 
 const num = n => Number(n).toLocaleString('en-US');
 const money = n => Number(n).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
@@ -460,6 +562,121 @@ function refresh() {
 }
 
 // ============================================================
+// INVESTING: cash turns into points at the same rate points pay out
+// ============================================================
+function readInv() { return calc(el('inv').value).points; }
+function invFocused() { return document.activeElement === el('inv'); }
+
+function setInv(n) {
+  const v = Math.max(0, Math.min(9999, Math.floor(n)));
+  el('inv').value = invFocused() ? String(v) : num(v);
+  refreshInv();
+}
+function bumpInv(n) { setInv(readInv() + n); }
+function onInvFocus() { el('inv').value = String(readInv()); }
+function onInvBlur() { el('inv').value = num(readInv()); }
+function onInvInput() {
+  const f = el('inv');
+  const clean = f.value.replace(/[^0-9]/g, '').slice(0, 4);
+  if (f.value !== clean) f.value = clean;
+  refreshInv();
+}
+
+function refreshInv() {
+  const dollars = readInv();
+  const gained = dollars * RULES.pointsPerDollar;
+  const before = calc(readPts());
+  const after = calc(before.points + gained);
+
+  el('invLine').textContent = dollars === 0
+    ? 'Put in an amount to see how many points it buys.'
+    : money(dollars) + ' becomes ' + num(gained) + ' points, taking her from ' +
+      num(before.points) + ' to ' + num(after.points) + '.';
+
+  el('invConfirm').disabled = dollars === 0;
+  el('invConfirm').textContent = dollars === 0 ? 'Invest' : 'Invest ' + money(dollars);
+  el('invImpactWrap').classList.toggle('d-none', dollars === 0);
+  if (dollars === 0) return;
+
+  // Held and collected as a bonus every payout, the invested points pay this much.
+  const perPayout = after.bonus - before.bonus;
+  const earned = perPayout * months;
+
+  let rows = '<div class="d-flex justify-content-between py-1"><span>She hands over</span><strong>' +
+      money(dollars) + '</strong></div>' +
+    '<div class="d-flex justify-content-between py-1"><span>She gets</span><strong>' +
+      num(gained) + ' points</strong></div>';
+
+  if (perPayout > 0) {
+    rows += '<div class="d-flex justify-content-between py-1"><span>Her bonus every payout</span><strong>' +
+        money(before.bonus) + ' to ' + money(after.bonus) + '</strong></div>' +
+      '<div class="d-flex justify-content-between py-1 note up" style="border:none;margin:0;padding-top:.5rem"><span>Extra earned in ' +
+        months + ' months</span><strong>' + money(earned) + '</strong></div>';
+
+    // Only the points that complete a hundred do any work, so a smaller
+    // amount can buy exactly the same raise.
+    const needPoints = (after.blocks * RULES.blockSize) - before.points;
+    const needDollars = Math.ceil(needPoints / RULES.pointsPerDollar);
+    if (needDollars < dollars) {
+      rows += '<div class="pt-2" style="font-size:.95rem;color:#78350f">Worth knowing: ' +
+        money(needDollars) + ' would raise her bonus by the same ' + money(perPayout) +
+        ', because it reaches ' + num(after.blocks * RULES.blockSize) +
+        ' exactly. The rest buys points that do not pay until she reaches ' +
+        num(after.nextTier) + '.</div>';
+    }
+  } else {
+    rows += '<div class="pt-2" style="font-size:.95rem;color:#475569">This does not reach the next full 100 on its own, so her bonus stays at ' +
+      money(before.bonus) + '. She needs ' + num(after.toNextTier) + ' more points, which is ' +
+      money(Math.ceil(after.toNextTier / RULES.pointsPerDollar)) + ' more, to move it up.</div>';
+  }
+  el('invImpact').innerHTML = rows;
+}
+
+// Coming from a finished payout, her board is whatever the payout left behind.
+function reinvest() {
+  setPts(boardAfterPayout);
+  setInv(0);
+  go(4);
+}
+
+function renderStep4() {
+  el('s4Title').textContent = KIDS[kid].name + ', how much do you want to invest?';
+  setInv(readInv());
+}
+
+function renderStep5() {
+  const dollars = readInv();
+  const gained = dollars * RULES.pointsPerDollar;
+  const before = calc(readPts());
+  const after = calc(before.points + gained);
+  const name = KIDS[kid].name;
+  const perPayout = after.bonus - before.bonus;
+
+  el('s5Title').textContent = name + ' invested ' + money(dollars);
+  el('s5Sub').textContent = 'Take the cash and put the points on her board.';
+
+  el('invTodo').innerHTML = [
+    'Collect <strong>' + money(dollars) + '</strong> from ' + name,
+    'Add <strong>' + num(gained) + ' points</strong> to her board',
+    'Her new total is <strong>' + num(after.points) + ' points</strong>'
+  ].map(i => '<li><span>' + i + '</span></li>').join('');
+
+  el('invNext').textContent = perPayout > 0
+    ? 'Her bonus goes from ' + money(before.bonus) + ' to ' + money(after.bonus) +
+      ' at every payout from now on. These points start earning at the next payout, so they are not part of today\'s cash out.'
+    : 'This does not reach a new full 100 yet, so her bonus stays at ' + money(before.bonus) +
+      ' for now. These points start earning at the next payout.';
+
+  // Roll the balance forward so the next payout starts from the new total.
+  investedToday[kid] += gained;
+  setPts(after.points);
+  saveBalance(kid, after.points);
+  setInv(0);
+
+  el('invOther').textContent = 'Now do ' + KIDS[other(kid)].name;
+}
+
+// ============================================================
 // STEP 2: the three options
 // ============================================================
 
@@ -481,7 +698,11 @@ function project(id, startPoints, monthCount, earnPerMonth) {
 
 function setMonths(m) {
   months = m;
-  document.querySelectorAll('.seg-btn').forEach(b => b.classList.toggle('on', Number(b.dataset.m) === m));
+  document.querySelectorAll('.seg-btn').forEach(b => {
+    const own = Number(b.dataset.m || b.dataset.im);
+    b.classList.toggle('on', own === m);
+  });
+  if (!el('step4').classList.contains('d-none')) { refreshInv(); return; }
   const keep = choice;
   renderStep2();
   if (keep) chooseOption(keep);
@@ -527,6 +748,13 @@ function renderStep2() {
   el('tierBar').style.width = (c.points % RULES.blockSize) + '%';
 
   // Below one full block nothing can happen, so show why instead of three dead cards.
+  const bought = investedToday[kid];
+  el('investFlag').classList.toggle('d-none', bought === 0);
+  if (bought > 0) {
+    el('investFlag').textContent = KIDS[kid].name + ' invested ' + num(bought) +
+      ' points today. Those are meant to start earning at the next payout, so they should not be cashed out now.';
+  }
+
   el('notYet').classList.toggle('d-none', enough);
   el('options').classList.toggle('d-none', !enough);
   el('confirm').classList.toggle('d-none', !enough);
@@ -640,22 +868,47 @@ function renderStep3() {
 
   el('otherKid').textContent = 'Now do ' + KIDS[other(kid)].name;
   saveBalance(kid, r.pointsAfter);
+  boardAfterPayout = r.pointsAfter;
+
+  // She has cash in hand right now, which is the moment investing makes sense.
+  el('reinvite').classList.toggle('d-none', r.cash <= 0);
+  if (r.cash > 0) {
+    el('reinviteTitle').textContent = name + ' has ' + money(r.cash) + ' in hand.';
+    el('reinviteBody').textContent = 'Putting some of it back in buys 10 points per dollar, and every full 100 points pays ' +
+      money(RULES.bonusAmount) + ' at every payout after that.';
+  }
 }
 
 // ============================================================
 // NAVIGATION
 // ============================================================
+// Steps 1 to 3 are the payout flow. Steps 4 and 5 are the investing flow,
+// which branches off step 1 and has its own two dot progress.
+const SUBS = {
+  1: 'Time to decide what to do with your points',
+  2: 'Time to decide what to do with your points',
+  3: 'Here is what happens next',
+  4: 'Turn cash into points',
+  5: 'Here is what happens next'
+};
+
+function setDots(step) {
+  const investing = step >= 4;
+  const total = investing ? 2 : 3;
+  const active = investing ? step - 3 : step;
+  el('dots').innerHTML = Array.from({ length: total },
+    (_, i) => '<span class="' + (i < active ? 'on' : '') + '"></span>').join('');
+}
+
 function go(step) {
   if (step === 2) renderStep2();
   if (step === 3) renderStep3();
-  [1, 2, 3].forEach(n => {
-    el('step' + n).classList.toggle('d-none', n !== step);
-    el('dot' + n).classList.toggle('on', n <= step);
-  });
+  if (step === 4) renderStep4();
+  if (step === 5) renderStep5();
+  [1, 2, 3, 4, 5].forEach(n => el('step' + n).classList.toggle('d-none', n !== step));
+  setDots(step);
   el('startOver').classList.toggle('d-none', step === 1);
-  el('mastSub').textContent = step === 3
-    ? 'Here is what happens next'
-    : 'Time to decide what to do with your points';
+  el('mastSub').textContent = SUBS[step];
   window.scrollTo(0, 0);
 }
 
@@ -668,6 +921,7 @@ function switchKid() {
 function reset() {
   kid = null;
   choice = null;
+  el('inv').value = '0';
   const root = document.documentElement.style;
   root.setProperty('--kid', '#475569');
   root.setProperty('--kid-dark', '#334155');

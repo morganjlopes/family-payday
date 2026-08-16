@@ -51,6 +51,29 @@ Cash Out converts every full hundred and leaves the remainder on the board. Bonu
 
 Below 100 points nothing can be paid out at all, so step 2 replaces the option cards with a plain explanation and the number of points still needed.
 
+## Investing cash
+
+From step 1, "Invest cash" opens a second flow where she hands over real money and it becomes points at the same rate points are worth: **$1 buys 10 points**. The result card tells you to collect the cash and what her new board total is.
+
+The screen shows what the money actually buys her, because that is the lesson:
+
+| | |
+|---|---|
+| She hands over | $10.00 |
+| She gets | 100 points |
+| Her bonus every payout | $10.00 to $11.00 |
+| Extra earned in 12 months | $12.00 |
+
+It also flags inefficient amounts. At 1,028 points, investing $8 reaches 1,100 exactly and raises her bonus by the same $1 that $10 would, so the extra $2 buys points that do nothing until she reaches 1,200. Only points that complete a hundred do any work.
+
+Right after a payout that pays cash, step 3 offers to put some of it back in, starting from her post payout balance rather than the pre payout one.
+
+### Two rules worth knowing
+
+**Invested points are for the next payout.** They land on the board and start earning at the following payout. If a kid invests and then runs a payout in the same sitting, step 2 shows a warning, because buying 100 points for $10 and immediately cashing them out for $11 would be free money.
+
+**There is no deposit cap.** Every invested dollar returns 10 cents at every payout, permanently, and that obligation never shrinks. $100 invested is 1,000 points paying $10 a month forever, and she can still cash the whole thing out for $110. If that gets uncomfortable, a cap belongs in `refreshInv()` and `RULES`.
+
 ## Why Roll Over is worth picking
 
 Roll Over and Bonus Only are worth the same amount today. At 1028 points, Bonus Only hands over $10 and Roll Over hands over 100 points, which are worth $10. The real difference is when the next raise arrives, so each option card says truthfully what happens to next month's bonus:
