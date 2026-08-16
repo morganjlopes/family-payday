@@ -51,9 +51,17 @@ Cash Out converts every full hundred and leaves the remainder on the board. Bonu
 
 Below 100 points nothing can be paid out at all, so step 2 replaces the option cards with a plain explanation and the number of points still needed.
 
+## The flow
+
+1. **Whose turn is it?** Tapping a kid advances right away and themes the app in her color.
+2. **Which would you like to do?** Manage Points or Invest Cash.
+3. Then either **how many points do you have** or **how much do you want to invest**, never both.
+
+A chip under the header shows where you are, like "Avery, Invest Cash". The two paths are different lengths, so a chip carries more than step dots would.
+
 ## Investing cash
 
-From step 1, "Invest cash" opens a second flow where she hands over real money and it becomes points at the same rate points are worth: **$1 buys 10 points**. The result card tells you to collect the cash and what her new board total is.
+Choosing Invest Cash opens the flow where she hands over real money and it becomes points at the same rate points are worth: **$1 buys 10 points**. The result card tells you to collect the cash and what her new board total is.
 
 The screen shows what the money actually buys her, because that is the lesson:
 
@@ -63,6 +71,8 @@ The screen shows what the money actually buys her, because that is the lesson:
 | She gets | 100 points |
 | Her bonus every payout | $10.00 to $11.00 |
 | Extra earned in 12 months | $12.00 |
+
+Her current point total sits on that screen as a small secondary field, prefilled from her saved balance, because the bonus change is the whole lesson and it cannot be shown without knowing where she started.
 
 It also flags inefficient amounts. At 1,028 points, investing $8 reaches 1,100 exactly and raises her bonus by the same $1 that $10 would, so the extra $2 buys points that do nothing until she reaches 1,200. Only points that complete a hundred do any work.
 
