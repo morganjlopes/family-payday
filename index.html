@@ -450,7 +450,7 @@
     </div>
 
     <div class="tier mb-3">
-      <div class="fw-bold mb-2 text-uppercase" style="font-size:.75rem;letter-spacing:.06em;color:#64748b">What this earns her</div>
+      <div class="fw-bold mb-2 text-uppercase" style="font-size:.75rem;letter-spacing:.06em;color:#64748b">What this earns</div>
       <p class="mb-0" id="invNext"></p>
     </div>
 
@@ -536,6 +536,7 @@ const money = n => Number(n).toLocaleString('en-US', { style: 'currency', curren
 const el = id => document.getElementById(id);
 const other = k => (k === 'avery' ? 'rowan' : 'avery');
 const hundreds = n => num(n) + ' full hundred' + (n === 1 ? '' : 's');
+const poss = n => n + (n.slice(-1).toLowerCase() === 's' ? "'" : "'s");
 const digits = v => Math.max(0, Math.floor(Number(String(v).replace(/[^0-9]/g, '')) || 0));
 
 function balances() {
@@ -652,14 +653,15 @@ function onInvInput() {
 }
 
 function refreshInv() {
-  if (!el('invLine')) return;
+  if (!el('invLine') || !kid) return;
+  const name = KIDS[kid].name;
   const gained = dollars * RULES.pointsPerDollar;
   const before = calc(board);
   const after = calc(before.points + gained);
 
   el('invLine').textContent = dollars === 0
     ? 'Put in an amount to see how many points it buys.'
-    : money(dollars) + ' becomes ' + num(gained) + ' points, taking her from ' +
+    : money(dollars) + ' becomes ' + num(gained) + ' points, taking ' + name + ' from ' +
       num(before.points) + ' to ' + num(after.points) + '.';
 
   el('invConfirm').disabled = dollars === 0;
@@ -669,13 +671,13 @@ function refreshInv() {
 
   const perPayout = after.bonus - before.bonus;
 
-  let rows = '<div class="d-flex justify-content-between py-1"><span>She hands over</span><strong>' +
+  let rows = '<div class="d-flex justify-content-between py-1"><span>' + name + ' hands over</span><strong>' +
       money(dollars) + '</strong></div>' +
-    '<div class="d-flex justify-content-between py-1"><span>She gets</span><strong>' +
+    '<div class="d-flex justify-content-between py-1"><span>' + name + ' gets</span><strong>' +
       num(gained) + ' points</strong></div>';
 
   if (perPayout > 0) {
-    rows += '<div class="d-flex justify-content-between py-1"><span>Her bonus every payout</span><strong>' +
+    rows += '<div class="d-flex justify-content-between py-1"><span>' + poss(name) + ' bonus every payout</span><strong>' +
         money(before.bonus) + ' to ' + money(after.bonus) + '</strong></div>' +
       '<div class="d-flex justify-content-between py-1 note up" style="border:none;margin:0;padding-top:.5rem"><span>Extra earned in ' +
         months + ' months</span><strong>' + money(perPayout * months) + '</strong></div>';
@@ -686,14 +688,14 @@ function refreshInv() {
     const needDollars = Math.ceil(needPoints / RULES.pointsPerDollar);
     if (needDollars < dollars) {
       rows += '<div class="pt-2" style="font-size:.95rem;color:#78350f">Worth knowing: ' +
-        money(needDollars) + ' would raise her bonus by the same ' + money(perPayout) +
+        money(needDollars) + ' would raise ' + poss(name) + ' bonus by the same ' + money(perPayout) +
         ', because it reaches ' + num(after.blocks * RULES.blockSize) +
-        ' exactly. The rest buys points that do not pay until she reaches ' +
+        ' exactly. The rest buys points that do not pay until the board reaches ' +
         num(after.nextTier) + '.</div>';
     }
   } else {
-    rows += '<div class="pt-2" style="font-size:.95rem;color:#475569">This does not reach the next full 100 on its own, so her bonus stays at ' +
-      money(before.bonus) + '. She needs ' + num(after.toNextTier) + ' more points, which is ' +
+    rows += '<div class="pt-2" style="font-size:.95rem;color:#475569">This does not reach the next full 100 on its own, so ' + poss(name) + ' bonus stays at ' +
+      money(before.bonus) + '. That needs ' + num(after.toNextTier) + ' more points, which is ' +
       money(Math.ceil(after.toNextTier / RULES.pointsPerDollar)) + ' more, to move it up.</div>';
   }
   el('invImpact').innerHTML = rows;
@@ -714,18 +716,18 @@ function renderInvestResult() {
   const perPayout = after.bonus - before.bonus;
 
   el('s5Title').textContent = name + ' invested ' + money(dollars);
-  el('s5Sub').textContent = 'Take the cash and put the points on her board.';
+  el('s5Sub').textContent = 'Take the cash and put the points on ' + poss(name) + ' board.';
 
   el('invTodo').innerHTML = [
     'Collect <strong>' + money(dollars) + '</strong> from ' + name,
-    'Add <strong>' + num(gained) + ' points</strong> to her board',
-    'Her new total is <strong>' + num(after.points) + ' points</strong>'
+    'Add <strong>' + num(gained) + ' points</strong> to ' + poss(name) + ' board',
+    poss(name) + ' new total is <strong>' + num(after.points) + ' points</strong>'
   ].map(i => '<li><span>' + i + '</span></li>').join('');
 
   el('invNext').textContent = perPayout > 0
-    ? 'Her bonus goes from ' + money(before.bonus) + ' to ' + money(after.bonus) +
+    ? poss(name) + ' bonus goes from ' + money(before.bonus) + ' to ' + money(after.bonus) +
       ' at every payout from now on. These points start earning at the next payout, so they are not part of today\'s cash out.'
-    : 'This does not reach a new full 100 yet, so her bonus stays at ' + money(before.bonus) +
+    : 'This does not reach a new full 100 yet, so ' + poss(name) + ' bonus stays at ' + money(before.bonus) +
       ' for now. These points start earning at the next payout.';
 
   investedToday[kid] += gained;
@@ -847,40 +849,40 @@ function renderPayoutResult() {
 
   el('s3Title').textContent = name + ' chose ' + opt.title;
   el('s3Sub').textContent = r.cash > 0
-    ? 'Pay out ' + money(r.cash) + ' and update her board.'
-    : 'No money changes hands. Just update her board.';
+    ? 'Pay out ' + money(r.cash) + ' and update ' + poss(name) + ' board.'
+    : 'No money changes hands. Just update ' + poss(name) + ' board.';
 
   let items;
   if (choice === 'cashout') {
     items = ['Hand ' + name + ' <strong>' + money(r.cash) + '</strong> in cash',
              c.leftover > 0
-               ? 'Set her board to <strong>' + num(c.leftover) + ' points</strong>, the leftover that did not make a full 100'
-               : 'Set her board back to <strong>0 points</strong>'];
+               ? 'Set ' + poss(name) + ' board to <strong>' + num(c.leftover) + ' points</strong>, the leftover that did not make a full 100'
+               : 'Set ' + poss(name) + ' board back to <strong>0 points</strong>'];
   } else if (choice === 'bonus') {
     items = ['Hand ' + name + ' <strong>' + money(r.cash) + '</strong> in cash',
-             'Leave her board at <strong>' + num(c.points) + ' points</strong>'];
+             'Leave ' + poss(name) + ' board at <strong>' + num(c.points) + ' points</strong>'];
   } else {
     items = ['No cash today',
-             'Add <strong>' + num(c.bonusPoints) + ' points</strong> to her board',
-             'Her new total is <strong>' + num(r.pointsAfter) + ' points</strong>'];
+             'Add <strong>' + num(c.bonusPoints) + ' points</strong> to ' + poss(name) + ' board',
+             poss(name) + ' new total is <strong>' + num(r.pointsAfter) + ' points</strong>'];
   }
   el('todo').innerHTML = items.map(i => '<li><span>' + i + '</span></li>').join('');
 
   let next;
   if (choice === 'cashout') {
     next = c.leftover > 0
-      ? 'She starts with ' + num(c.leftover) + ' points. She needs ' + num(RULES.blockSize - c.leftover) +
-        ' more to reach her next 100 and earn ' + money(PER_BLOCK) + '.'
-      : 'She starts from zero. Her next payout comes when she saves up ' + num(RULES.blockSize) + ' points.';
+      ? name + ' starts with ' + num(c.leftover) + ' points, and needs ' + num(RULES.blockSize - c.leftover) +
+        ' more to reach the next 100 and earn ' + money(PER_BLOCK) + '.'
+      : name + ' starts from zero. The next payout comes after saving up ' + num(RULES.blockSize) + ' points again.';
   } else if (choice === 'bonus') {
-    next = 'She keeps ' + num(c.points) + ' points, so she earns ' + money(c.bonus) +
-           ' again at the next payout without doing anything.';
+    next = name + ' keeps ' + num(c.points) + ' points, so that ' + money(c.bonus) +
+           ' comes again at the next payout without doing anything.';
   } else if (after.blocks > c.blocks) {
-    next = 'Her monthly bonus just went up from ' + money(c.bonus) + ' to ' + money(after.bonus) +
-           '. She earns that every payout from now on.';
+    next = poss(name) + ' monthly bonus just went up from ' + money(c.bonus) + ' to ' + money(after.bonus) +
+           ', and that comes at every payout from now on.';
   } else {
-    next = 'Her bonus stays at ' + money(c.bonus) + ' until she reaches ' + num(after.nextTier) +
-           ' points. She needs ' + num(after.toNextTier) + ' more.';
+    next = poss(name) + ' bonus stays at ' + money(c.bonus) + ' until the board reaches ' +
+           num(after.nextTier) + ' points. That is ' + num(after.toNextTier) + ' more.';
   }
   el('nextMonth').textContent = next;
 
