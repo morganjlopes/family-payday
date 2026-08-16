@@ -2,7 +2,21 @@
 
 A three step tool for the monthly points payout. Built for a kid on the iPad.
 
-Open `index.html` by double clicking it. No server needed.
+**Live at https://morganjlopes.github.io/family-payday/**
+
+It is also a plain static file, so opening `index.html` by double clicking still works with no server.
+
+## Putting the icon on the iPad
+
+1. Open https://morganjlopes.github.io/family-payday/ in **Safari** on the iPad. This does not work from Chrome.
+2. Tap the **Share** button, the square with the arrow pointing up.
+3. Scroll down and tap **Add to Home Screen**, then tap **Add**.
+
+It lands on the home screen as "Payday" with the coin icon and opens full screen with no Safari toolbars. The status bar and home indicator are handled with `env(safe-area-inset-*)` so nothing gets covered.
+
+Each girl's balance is saved on the device it was entered on, so use the same iPad each month or just retype the total.
+
+The site carries a `noindex` tag and a `robots.txt` that disallows everything, so search engines will not list it. Anyone with the link can still open it.
 
 ## The rules
 
