@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Family Payday</title>
+<meta name="description" content="Turn points into money on payout day.">
+<meta name="robots" content="noindex, nofollow">
+
+<!-- Add to Home Screen on iPad. iOS needs a real PNG here, it will not take an SVG. -->
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Payday">
+<link rel="icon" href="icons/icon-32.png" sizes="32x32">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#db2777">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  :root {
+    --kid: #475569;
+    --kid-dark: #334155;
+    --kid-light: #f1f5f9;
+    --avery: #db2777;
+    --avery-dark: #be185d;
+    --avery-light: #fce7f3;
+    --rowan: #7c3aed;
+    --rowan-dark: #6d28d9;
+    --rowan-light: #ede9fe;
+    --line: #e2e8f0;
+  }
+
+  body {
+    font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    background: #f8fafc;
+    color: #1e293b;
+    font-size: 17px;
+    -webkit-text-size-adjust: 100%;
+    padding-bottom: 150px;
+  }
+
+  .shell { max-width: 760px; padding-left: max(1rem, env(safe-area-inset-left)); padding-right: max(1rem, env(safe-area-inset-right)); }
+
+  .masthead {
+    background: var(--kid); color: #fff; transition: background .25s ease;
+    padding: calc(1.1rem + env(safe-area-inset-top)) 0 1.1rem;
+  }
+  .masthead h1 { font-size: 1.5rem; font-weight: 800; margin: 0; letter-spacing: -.02em; }
+  .masthead .sub { opacity: .85; font-size: .95rem; }
+
+  .steps { display: flex; gap: .4rem; justify-content: center; margin: 1rem 0 1.25rem; }
+  .steps span { width: 40px; height: 5px; border-radius: 99px; background: var(--line); }
+  .steps span.on { background: var(--kid); }
+
+  /* ---------- Tappable cards ---------- */
+  .pick {
+    display: block; width: 100%; text-align: left;
+    background: #fff; border: 3px solid var(--line); border-radius: 18px;
+    padding: 1rem 1.15rem; cursor: pointer;
+    transition: border-color .15s, background .15s, transform .08s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .pick:hover { border-color: #94a3b8; background: #f8fafc; }
+  .pick:active { transform: scale(.985); background: #f1f5f9; }
+  .pick.on, .pick.on:hover { border-color: var(--kid); background: var(--kid-light); }
+
+  .kidbtn { min-height: 128px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .4rem; }
+  .kidbtn .face { width: 62px; height: 62px; border-radius: 50%; display: grid; place-items: center; font-size: 2rem; line-height: 1; }
+  .kidbtn .nm { font-size: 1.3rem; font-weight: 700; }
+  .kidbtn .last { font-size: .85rem; color: #64748b; }
+
+  /* ---------- Points entry ---------- */
+  .points-field {
+    font-size: 3.25rem; font-weight: 800; text-align: center;
+    border: 3px solid var(--line); border-radius: 18px;
+    padding: .6rem .25rem; width: 100%; background: #fff; color: #1e293b;
+    font-variant-numeric: tabular-nums;
+  }
+  .points-field:focus { outline: none; border-color: var(--kid); }
+
+  .round-btn {
+    width: 74px; height: 74px; border-radius: 50%; flex: 0 0 auto; padding: 0;
+    border: 3px solid var(--line); background: #fff;
+    font-size: 2.1rem; font-weight: 700; color: #334155; line-height: 1;
+    display: grid; place-items: center;
+    transition: background .15s, border-color .15s, transform .08s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .round-btn:hover { background: #eef2f7; border-color: #94a3b8; }
+  .round-btn:active { background: #dde3ea; border-color: #64748b; transform: scale(.93); }
+
+  .chip {
+    min-height: 58px; border-radius: 14px; flex: 1;
+    border: 3px solid var(--line); background: #fff;
+    font-size: 1.1rem; font-weight: 700; color: #334155;
+    transition: background .15s, border-color .15s, transform .08s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .chip:hover { background: #eef2f7; border-color: #94a3b8; }
+  .chip:active { background: #dde3ea; border-color: #64748b; transform: scale(.97); }
+
+  .clear-btn {
+    display: inline-flex; align-items: center; gap: .5rem;
+    background: none; border: none; color: #64748b;
+    font-size: 1rem; font-weight: 700; padding: .6rem 1rem; border-radius: 12px;
+    transition: background .15s, color .15s;
+  }
+  .clear-btn:hover { background: #e2e8f0; color: #1e293b; }
+  .clear-btn:active { background: #cbd5e1; }
+
+  /* ---------- Panels ---------- */
+  .tier { background: #fff; border: 2px solid var(--line); border-radius: 16px; padding: .9rem 1.1rem; }
+  .tier .bar { height: 12px; border-radius: 99px; background: #e8edf3; overflow: hidden; }
+  .tier .bar > i { display: block; height: 100%; background: var(--kid); border-radius: 99px; transition: width .3s ease; }
+
+  /* ---------- Option rows ---------- */
+  .opt-main { display: flex; align-items: center; gap: .9rem; }
+  .opt-text { flex: 1 1 auto; min-width: 0; }
+  .opt-title { font-size: 1.25rem; font-weight: 800; margin: 0; }
+  .opt-desc { color: #64748b; margin: .1rem 0 0; font-size: .95rem; }
+  .opt-stats { display: flex; gap: 1.1rem; flex: 0 0 auto; align-items: center; }
+  .stat { text-align: right; min-width: 88px; }
+  .stat.proj { border-left: 2px solid rgba(100,116,139,.2); padding-left: 1.1rem; }
+  .stat .val { font-size: 1.45rem; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .stat .lbl { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: #64748b; font-weight: 700; }
+  .note { font-size: .98rem; color: #475569; margin: .85rem 0 0; padding-top: .8rem; border-top: 2px solid rgba(100,116,139,.18); }
+  .note.up { color: #15803d; font-weight: 700; }
+
+  .tick {
+    width: 30px; height: 30px; border-radius: 50%; border: 3px solid #cbd5e1;
+    display: grid; place-items: center; color: #fff; font-weight: 800; flex: 0 0 auto; font-size: .9rem;
+  }
+  .pick.on .tick { background: var(--kid); border-color: var(--kid); }
+
+  .seg { display: inline-flex; background: #e8edf3; border-radius: 12px; padding: 4px; gap: 4px; }
+  .seg-btn {
+    border: none; background: none; border-radius: 9px; padding: .5rem .95rem;
+    font-size: .95rem; font-weight: 700; color: #475569;
+    transition: background .15s, color .15s;
+  }
+  .seg-btn:hover { background: #dbe2ea; color: #1e293b; }
+  .seg-btn.on, .seg-btn.on:hover { background: var(--kid); color: #fff; }
+
+  @media (max-width: 640px) {
+    .opt-main { flex-wrap: wrap; }
+    .opt-stats { width: 100%; justify-content: space-between; }
+    .stat { text-align: left; }
+  }
+
+  /* ---------- Result ---------- */
+  .todo { counter-reset: t; list-style: none; padding: 0; margin: 0; }
+  .todo li {
+    counter-increment: t; display: flex; gap: .9rem; align-items: flex-start;
+    padding: .95rem 0; border-bottom: 2px solid #f1f5f9; font-size: 1.12rem;
+  }
+  .todo li:last-child { border-bottom: 0; }
+  .todo li::before {
+    content: counter(t); flex: 0 0 auto;
+    width: 34px; height: 34px; border-radius: 50%; background: var(--kid); color: #fff;
+    display: grid; place-items: center; font-weight: 800; font-size: 1rem;
+  }
+  details summary { cursor: pointer; font-weight: 700; color: #475569; }
+  details summary:hover { color: #1e293b; }
+  .maths { font-variant-numeric: tabular-nums; color: #475569; font-size: .98rem; }
+  .money { font-variant-numeric: tabular-nums; }
+
+  /* ---------- Sticky action bar ---------- */
+  .actions {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+    background: rgba(248, 250, 252, .94);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border-top: 2px solid var(--line);
+    padding: .8rem 1rem calc(.8rem + env(safe-area-inset-bottom));
+  }
+  .actions .inner { max-width: 760px; margin: 0 auto; display: flex; gap: .7rem; }
+
+  .btn-go {
+    flex: 1 1 auto; min-height: 64px; border-radius: 16px;
+    font-size: 1.2rem; font-weight: 700;
+    background: var(--kid); border: 3px solid var(--kid); color: #fff;
+    transition: background .15s, border-color .15s, transform .08s;
+  }
+  .btn-go:hover:not(:disabled) { background: var(--kid-dark); border-color: var(--kid-dark); color: #fff; }
+  .btn-go:active:not(:disabled) { background: var(--kid-dark); border-color: var(--kid-dark); color: #fff; transform: scale(.985); }
+  .btn-go:disabled { background: #cbd5e1; border-color: #cbd5e1; color: #64748b; opacity: 1; }
+
+  .btn-quiet {
+    flex: 0 0 auto; min-height: 64px; border-radius: 16px; padding: 0 1.5rem;
+    font-size: 1.1rem; font-weight: 700;
+    background: #fff; border: 3px solid var(--line); color: #475569;
+    transition: background .15s, border-color .15s, transform .08s;
+  }
+  .btn-quiet:hover { background: #eef2f7; border-color: #94a3b8; color: #1e293b; }
+  .btn-quiet:active { background: #dde3ea; border-color: #64748b; transform: scale(.985); }
+
+  .btn-mast {
+    background: rgba(255,255,255,.18); border: 2px solid rgba(255,255,255,.5); color: #fff;
+    font-weight: 700; border-radius: 99px; padding: .35rem 1rem; font-size: .9rem;
+    transition: background .15s;
+  }
+  .btn-mast:hover { background: rgba(255,255,255,.32); color: #fff; }
+  .btn-mast:active { background: rgba(255,255,255,.45); color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="container shell d-flex justify-content-between align-items-center">
+    <div>
+      <h1>Family Payday</h1>
+      <div class="sub" id="mastSub">Time to decide what to do with your points</div>
+    </div>
+    <button class="btn-mast d-none" id="startOver" onclick="reset()">Start over</button>
+  </div>
+</div>
+
+<div class="container shell">
+
+  <div class="steps"><span id="dot1"></span><span id="dot2"></span><span id="dot3"></span></div>
+
+  <!-- ================= STEP 1 ================= -->
+  <section id="step1">
+    <h2 class="h5 fw-bold mb-3">Whose turn is it?</h2>
+    <div class="row g-3 mb-4">
+      <div class="col-6">
+        <button class="pick kidbtn" id="pick-avery" onclick="chooseKid('avery')">
+          <span class="face" style="background:var(--avery-light)">&#129412;</span>
+          <span class="nm">Avery</span>
+          <span class="last" id="last-avery"></span>
+        </button>
+      </div>
+      <div class="col-6">
+        <button class="pick kidbtn" id="pick-rowan" onclick="chooseKid('rowan')">
+          <span class="face" style="background:var(--rowan-light)">&#129430;</span>
+          <span class="nm">Rowan</span>
+          <span class="last" id="last-rowan"></span>
+        </button>
+      </div>
+    </div>
+
+    <div id="ptsBlock" class="d-none">
+      <h2 class="h5 fw-bold mb-3">How many points do you have?</h2>
+      <div class="d-flex gap-3 align-items-center mb-3">
+        <button class="round-btn" onclick="bump(-10)" aria-label="Take away 10 points">&#8722;</button>
+        <input class="points-field" id="pts" type="text" inputmode="numeric" pattern="[0-9]*" value="0"
+               oninput="onInput()" onfocus="onFocus()" onblur="onBlur()">
+        <button class="round-btn" onclick="bump(10)" aria-label="Add 10 points">+</button>
+      </div>
+      <div class="d-flex gap-2 mb-2">
+        <button class="chip" onclick="bump(50)">+50</button>
+        <button class="chip" onclick="bump(100)">+100</button>
+      </div>
+      <div class="text-center mb-3">
+        <button class="clear-btn" onclick="setPts(0)">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+          Clear
+        </button>
+      </div>
+
+      <div class="tier"><p class="mb-0" id="peekLine"></p></div>
+
+      <div class="actions"><div class="inner">
+        <button class="btn btn-go" id="toStep2" onclick="go(2)" disabled>See my choices</button>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- ================= STEP 2 ================= -->
+  <section id="step2" class="d-none">
+    <h2 class="h5 fw-bold mb-1" id="s2Title"></h2>
+    <p class="text-secondary mb-3" id="s2Sub" style="font-size:.98rem"></p>
+
+    <div class="tier mb-3">
+      <div class="d-flex justify-content-between mb-2" style="font-size:.95rem">
+        <strong id="tierLeft"></strong>
+        <span class="text-secondary" id="tierRight"></span>
+      </div>
+      <div class="bar"><i id="tierBar" style="width:0%"></i></div>
+    </div>
+
+    <div class="tier text-center d-none mb-3" id="notYet">
+      <p class="fs-4 fw-bold mb-2" id="notYetTitle"></p>
+      <p class="mb-0 text-secondary" id="notYetBody"></p>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3" id="projRow">
+      <strong style="font-size:.95rem">If you pick the same thing every payout</strong>
+      <div class="seg">
+        <button class="seg-btn on" data-m="6" onclick="setMonths(6)">6 months</button>
+        <button class="seg-btn" data-m="12" onclick="setMonths(12)">12 months</button>
+      </div>
+    </div>
+
+    <div class="d-grid gap-3" id="options"></div>
+
+    <p class="text-secondary mt-3 mb-0" style="font-size:.88rem" id="projNote"></p>
+
+    <div class="actions"><div class="inner">
+      <button class="btn btn-quiet" onclick="go(1)">Back</button>
+      <button class="btn btn-go" id="confirm" onclick="go(3)" disabled>That is my choice</button>
+    </div></div>
+  </section>
+
+  <!-- ================= STEP 3 ================= -->
+  <section id="step3" class="d-none">
+    <h2 class="h4 fw-bold mb-1" id="s3Title"></h2>
+    <p class="text-secondary mb-3" id="s3Sub"></p>
+
+    <div class="tier mb-3">
+      <div class="fw-bold mb-1 text-uppercase" style="font-size:.75rem;letter-spacing:.06em;color:#64748b">Do this now</div>
+      <ol class="todo" id="todo"></ol>
+    </div>
+
+    <div class="tier mb-3">
+      <div class="fw-bold mb-2 text-uppercase" style="font-size:.75rem;letter-spacing:.06em;color:#64748b">What this means next month</div>
+      <p class="mb-0" id="nextMonth"></p>
+    </div>
+
+    <details class="tier mb-3">
+      <summary>Show the math</summary>
+      <div class="maths mt-3" id="maths"></div>
+    </details>
+
+    <div class="actions"><div class="inner">
+      <button class="btn btn-quiet" onclick="reset()">Done</button>
+      <button class="btn btn-go" id="otherKid" onclick="switchKid()"></button>
+    </div></div>
+  </section>
+
+</div>
+
+<script>
+// ============================================================
+// THE RULES. Change these numbers and everything follows.
+// Points only turn into cash in whole blocks of 100.
+// Anything left over stays on the board.
+// ============================================================
+const RULES = {
+  pointsPerDollar: 10,   // 10 points = $1
+  blockSize: 100,        // but points only convert in full blocks of 100
+  bonusAmount: 1,        // each full block also earns a $1 saving bonus
+  bonusRepeats: true     // and it pays again every payout
+};
+
+// One full block of 100 points is worth $10 base plus the $1 bonus.
+const PER_BLOCK = (RULES.blockSize / RULES.pointsPerDollar) + RULES.bonusAmount;
+
+function calc(points) {
+  const p = Math.max(0, Math.floor(Number(String(points).replace(/[^0-9]/g, '')) || 0));
+  const blocks = Math.floor(p / RULES.blockSize);
+  const leftover = p % RULES.blockSize;
+  const base = (blocks * RULES.blockSize) / RULES.pointsPerDollar;
+  const bonus = blocks * RULES.bonusAmount;
+  return {
+    points: p,
+    blocks: blocks,
+    leftover: leftover,
+    base: base,
+    bonus: bonus,
+    bonusPoints: bonus * RULES.pointsPerDollar,
+    total: base + bonus,
+    nextTier: (blocks + 1) * RULES.blockSize,
+    toNextTier: ((blocks + 1) * RULES.blockSize) - p
+  };
+}
+
+function outcome(id, c) {
+  // Cash Out converts every full block. The leftover points stay on the board.
+  if (id === 'cashout')  return { cash: c.total, pointsAfter: c.leftover };
+  if (id === 'bonus')    return { cash: c.bonus, pointsAfter: c.points };
+  return { cash: 0, pointsAfter: c.points + c.bonusPoints };
+}
+
+// ============================================================
+// SETUP
+// ============================================================
+const KIDS = {
+  avery: { name: 'Avery', color: '#db2777', dark: '#be185d', light: '#fce7f3' },
+  rowan: { name: 'Rowan', color: '#7c3aed', dark: '#6d28d9', light: '#ede9fe' }
+};
+
+const OPTIONS = [
+  { id: 'cashout',  title: 'Cash Out',   desc: 'Turn full hundreds into money.' },
+  { id: 'bonus',    title: 'Bonus Only', desc: 'Take the bonus, keep your points.' },
+  { id: 'rollover', title: 'Roll Over',  desc: 'Turn the bonus into more points.' }
+];
+
+let kid = null;
+let choice = null;
+let months = 6;
+
+const num = n => Number(n).toLocaleString('en-US');
+const money = n => Number(n).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+const el = id => document.getElementById(id);
+const other = k => (k === 'avery' ? 'rowan' : 'avery');
+const hundreds = n => num(n) + ' full hundred' + (n === 1 ? '' : 's');
+
+function balances() {
+  try { return JSON.parse(localStorage.getItem('payday.balances')) || {}; }
+  catch (e) { return {}; }
+}
+function saveBalance(k, pts) {
+  const b = balances();
+  b[k] = pts;
+  try { localStorage.setItem('payday.balances', JSON.stringify(b)); } catch (e) {}
+}
+
+// ============================================================
+// STEP 1: who and how many
+// ============================================================
+function chooseKid(k) {
+  kid = k;
+  choice = null;
+  const root = document.documentElement.style;
+  root.setProperty('--kid', KIDS[k].color);
+  root.setProperty('--kid-dark', KIDS[k].dark);
+  root.setProperty('--kid-light', KIDS[k].light);
+  Object.keys(KIDS).forEach(x => el('pick-' + x).classList.toggle('on', x === k));
+  el('ptsBlock').classList.remove('d-none');
+
+  const saved = balances()[k];
+  setPts(typeof saved === 'number' ? saved : readPts());
+}
+
+function readPts() { return calc(el('pts').value).points; }
+function focused() { return document.activeElement === el('pts'); }
+
+// The field holds raw digits while it is being typed in, and a comma
+// formatted number the rest of the time, so the caret never jumps.
+function setPts(n) {
+  const v = Math.max(0, Math.min(999999, Math.floor(n)));
+  el('pts').value = focused() ? String(v) : num(v);
+  refresh();
+}
+function bump(n) { setPts(readPts() + n); }
+function onFocus() { el('pts').value = String(readPts()); }
+function onBlur() { el('pts').value = num(readPts()); }
+function onInput() {
+  const field = el('pts');
+  const clean = field.value.replace(/[^0-9]/g, '').slice(0, 6);
+  if (field.value !== clean) field.value = clean;
+  refresh();
+}
+
+function refresh() {
+  const c = calc(readPts());
+  let line;
+  if (c.points === 0) {
+    line = 'Put in your point total to see what it is worth.';
+  } else if (c.blocks === 0) {
+    line = num(c.points) + ' points is not a full 100 yet. You need ' + num(c.toNextTier) +
+           ' more to make your first ' + money(PER_BLOCK) + '.';
+  } else {
+    line = num(c.points) + ' points is ' + hundreds(c.blocks) + ', worth ' + money(c.total) + '.';
+    if (c.leftover > 0) line += ' Your other ' + num(c.leftover) + ' points stay on your board.';
+  }
+  el('peekLine').textContent = line;
+  el('toStep2').disabled = c.points === 0;
+}
+
+// ============================================================
+// STEP 2: the three options
+// ============================================================
+
+// Play one choice forward, making the same call at every payout.
+// The first payout uses the points she already has, so no earning is
+// added before it. Value is cash collected plus what the board is
+// worth if she cashed it all out at the end.
+function project(id, startPoints, monthCount, earnPerMonth) {
+  let pts = startPoints;
+  let cash = 0;
+  for (let m = 0; m < monthCount; m++) {
+    if (m > 0) pts += earnPerMonth;
+    const r = outcome(id, calc(pts));
+    cash += r.cash;
+    pts = r.pointsAfter;
+  }
+  return { cash: cash, points: pts, value: cash + calc(pts).total };
+}
+
+function setMonths(m) {
+  months = m;
+  document.querySelectorAll('.seg-btn').forEach(b => b.classList.toggle('on', Number(b.dataset.m) === m));
+  const keep = choice;
+  renderStep2();
+  if (keep) chooseOption(keep);
+}
+function noteFor(id, c) {
+  const r = outcome(id, c);
+  if (id === 'cashout') {
+    return c.leftover > 0
+      ? 'Your ' + num(c.leftover) + ' leftover points stay on your board. They did not add up to a full 100.'
+      : 'You cash in everything and start next month at 0 points.';
+  }
+  if (id === 'bonus') {
+    return 'You keep all ' + num(c.points) + ' points, so you earn ' + money(c.bonus) +
+           ' again next month without doing anything.';
+  }
+  const after = calc(r.pointsAfter);
+  if (after.blocks > c.blocks) {
+    return 'Your monthly bonus goes up from ' + money(c.bonus) + ' to ' + money(after.bonus) +
+           ', every month from now on.';
+  }
+  return 'Your bonus stays at ' + money(c.bonus) + ' until you reach ' + num(after.nextTier) +
+         ' points. You would need ' + num(after.toNextTier) + ' more after this.';
+}
+
+function noteClass(id, c) {
+  if (id !== 'rollover') return '';
+  return calc(outcome(id, c).pointsAfter).blocks > c.blocks ? 'up' : '';
+}
+
+function renderStep2() {
+  const c = calc(readPts());
+  const enough = c.blocks > 0;
+
+  el('s2Title').textContent = KIDS[kid].name + ', you have ' + num(c.points) + ' points';
+  el('s2Sub').textContent = !enough
+    ? 'Not a full 100 yet, so there is nothing to cash in.'
+    : c.blocks === 1
+      ? '1 full hundred, worth ' + money(PER_BLOCK) + '.'
+      : hundreds(c.blocks) + ' at ' + money(PER_BLOCK) + ' each is ' + money(c.total) + '.';
+
+  el('tierLeft').textContent = num(c.points) + ' points';
+  el('tierRight').textContent = num(c.toNextTier) + ' more to reach ' + num(c.nextTier);
+  el('tierBar').style.width = (c.points % RULES.blockSize) + '%';
+
+  // Below one full block nothing can happen, so show why instead of three dead cards.
+  el('notYet').classList.toggle('d-none', enough);
+  el('options').classList.toggle('d-none', !enough);
+  el('confirm').classList.toggle('d-none', !enough);
+  el('projRow').classList.toggle('d-none', !enough);
+  el('projNote').classList.toggle('d-none', !enough);
+  el('projNote').textContent = 'The last column is the cash you would collect over ' + months +
+    ' months plus what your points would be worth if you cashed out at the end. It assumes you do not earn any new points.';
+  choice = null;
+
+  if (!enough) {
+    el('notYetTitle').textContent = 'Not enough points yet';
+    el('notYetBody').textContent = 'Points turn into money 100 at a time. ' + KIDS[kid].name +
+      ' needs ' + num(c.toNextTier) + ' more to reach 100 and earn ' + money(PER_BLOCK) + '.';
+    return;
+  }
+
+  // The note only shows on the chosen card, so all three fit without scrolling.
+  el('options').innerHTML = OPTIONS.map(o => {
+    const r = outcome(o.id, c);
+    return '<button class="pick" data-opt="' + o.id + '" onclick="chooseOption(\'' + o.id + '\')">' +
+      '<div class="opt-main">' +
+        '<span class="tick">&#10003;</span>' +
+        '<div class="opt-text"><h3 class="opt-title">' + o.title + '</h3>' +
+        '<p class="opt-desc">' + o.desc + '</p></div>' +
+        '<div class="opt-stats">' +
+          '<div class="stat"><div class="val">' + money(r.cash) + '</div><div class="lbl">Cash today</div></div>' +
+          '<div class="stat"><div class="val">' + num(r.pointsAfter) + '</div><div class="lbl">Points after</div></div>' +
+          '<div class="stat proj"><div class="val">' + money(project(o.id, c.points, months, 0).value) +
+            '</div><div class="lbl">In ' + months + ' months</div></div>' +
+        '</div>' +
+      '</div>' +
+      '<p class="note d-none ' + noteClass(o.id, c) + '">' + noteFor(o.id, c) + '</p>' +
+    '</button>';
+  }).join('');
+
+  el('confirm').disabled = true;
+}
+
+function chooseOption(id) {
+  choice = id;
+  document.querySelectorAll('#options .pick').forEach(b => {
+    const on = b.dataset.opt === id;
+    b.classList.toggle('on', on);
+    b.querySelector('.note').classList.toggle('d-none', !on);
+  });
+  el('confirm').disabled = false;
+}
+
+// ============================================================
+// STEP 3: what happens now
+// ============================================================
+function renderStep3() {
+  const c = calc(readPts());
+  const opt = OPTIONS.find(o => o.id === choice);
+  const r = outcome(choice, c);
+  const name = KIDS[kid].name;
+  const after = calc(r.pointsAfter);
+
+  el('s3Title').textContent = name + ' chose ' + opt.title;
+  el('s3Sub').textContent = r.cash > 0
+    ? 'Pay out ' + money(r.cash) + ' and update her board.'
+    : 'No money changes hands. Just update her board.';
+
+  let items;
+  if (choice === 'cashout') {
+    items = ['Hand ' + name + ' <strong>' + money(r.cash) + '</strong> in cash',
+             c.leftover > 0
+               ? 'Set her board to <strong>' + num(c.leftover) + ' points</strong>, the leftover that did not make a full 100'
+               : 'Set her board back to <strong>0 points</strong>'];
+  } else if (choice === 'bonus') {
+    items = ['Hand ' + name + ' <strong>' + money(r.cash) + '</strong> in cash',
+             'Leave her board at <strong>' + num(c.points) + ' points</strong>'];
+  } else {
+    items = ['No cash today',
+             'Add <strong>' + num(c.bonusPoints) + ' points</strong> to her board',
+             'Her new total is <strong>' + num(r.pointsAfter) + ' points</strong>'];
+  }
+  el('todo').innerHTML = items.map(i => '<li><span>' + i + '</span></li>').join('');
+
+  let next;
+  if (choice === 'cashout') {
+    next = c.leftover > 0
+      ? 'She starts with ' + num(c.leftover) + ' points. She needs ' + num(RULES.blockSize - c.leftover) +
+        ' more to reach her next 100 and earn ' + money(PER_BLOCK) + '.'
+      : 'She starts from zero. Her next payout comes when she saves up ' + num(RULES.blockSize) + ' points.';
+  } else if (choice === 'bonus') {
+    next = 'She keeps ' + num(c.points) + ' points, so she earns ' + money(c.bonus) +
+           ' again at the next payout without doing anything.';
+  } else if (after.blocks > c.blocks) {
+    next = 'Her monthly bonus just went up from ' + money(c.bonus) + ' to ' + money(after.bonus) +
+           '. She earns that every payout from now on.';
+  } else {
+    next = 'Her bonus stays at ' + money(c.bonus) + ' until she reaches ' + num(after.nextTier) +
+           ' points. She needs ' + num(after.toNextTier) + ' more.';
+  }
+  el('nextMonth').textContent = next;
+
+  el('maths').innerHTML =
+    '<div>Points: <strong>' + num(c.points) + '</strong></div>' +
+    '<div>Full hundreds: <strong>' + num(c.blocks) + '</strong>' +
+      (c.leftover > 0 ? ' (' + num(c.leftover) + ' points left over, they do not convert)' : '') + '</div>' +
+    '<div>Base value: ' + hundreds(c.blocks) + ' at ' +
+      money(RULES.blockSize / RULES.pointsPerDollar) + ' each is <strong>' + money(c.base) + '</strong></div>' +
+    '<div>Saving bonus: ' + hundreds(c.blocks) + ' at ' + money(RULES.bonusAmount) +
+      ' each is <strong>' + money(c.bonus) + '</strong></div>' +
+    '<div>Everything together: <strong>' + money(c.total) + '</strong></div>' +
+    '<hr>' +
+    '<div>Choice: <strong>' + opt.title + '</strong></div>' +
+    '<div>Cash today: <strong>' + money(r.cash) + '</strong></div>' +
+    '<div>Points after: <strong>' + num(r.pointsAfter) + '</strong></div>';
+
+  el('otherKid').textContent = 'Now do ' + KIDS[other(kid)].name;
+  saveBalance(kid, r.pointsAfter);
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function go(step) {
+  if (step === 2) renderStep2();
+  if (step === 3) renderStep3();
+  [1, 2, 3].forEach(n => {
+    el('step' + n).classList.toggle('d-none', n !== step);
+    el('dot' + n).classList.toggle('on', n <= step);
+  });
+  el('startOver').classList.toggle('d-none', step === 1);
+  el('mastSub').textContent = step === 3
+    ? 'Here is what happens next'
+    : 'Time to decide what to do with your points';
+  window.scrollTo(0, 0);
+}
+
+function switchKid() {
+  const next = other(kid);
+  go(1);
+  chooseKid(next);
+}
+
+function reset() {
+  kid = null;
+  choice = null;
+  const root = document.documentElement.style;
+  root.setProperty('--kid', '#475569');
+  root.setProperty('--kid-dark', '#334155');
+  root.setProperty('--kid-light', '#f1f5f9');
+  Object.keys(KIDS).forEach(x => el('pick-' + x).classList.remove('on'));
+  el('ptsBlock').classList.add('d-none');
+  el('pts').value = '0';
+  go(1);
+  showLastBalances();
+}
+
+function showLastBalances() {
+  const b = balances();
+  Object.keys(KIDS).forEach(k => {
+    el('last-' + k).textContent = typeof b[k] === 'number' ? 'Last time: ' + num(b[k]) + ' points' : '';
+  });
+}
+
+showLastBalances();
+go(1);
+</script>
+</body>
+</html>
